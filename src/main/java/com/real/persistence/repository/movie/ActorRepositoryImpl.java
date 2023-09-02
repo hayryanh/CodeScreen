@@ -174,7 +174,10 @@ public class ActorRepositoryImpl implements ActorRepository {
         row.getRowValues().forEach(entity -> {
             final String role = entity.get(CsvMetadata.ROLE.name());
             if (role.equalsIgnoreCase(CsvMetadata.DIRECTOR.name())) {
-                table.populateIndex(entity.get(CsvMetadata.NAME.name()), entity.get(CsvMetadata.ID.name()));
+                final String directorFullName = entity.get(CsvMetadata.NAME.name());
+                if(directorFullName != null && directorFullName.isEmpty()) {
+                    table.populateIndex(entity.get(CsvMetadata.NAME.name()), entity.get(CsvMetadata.MOVIE_ID.name()));
+                }
             }
         });
     }
