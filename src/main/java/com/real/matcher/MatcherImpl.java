@@ -1,23 +1,31 @@
 package com.real.matcher;
 
-import java.util.Collections;
-import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.real.service.IntegrationDataService;
+import com.real.service.VodDataServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+
+@Slf4j
 public class MatcherImpl implements Matcher {
 
-  private static final Logger LOGGER = LoggerFactory.getLogger(MatcherImpl.class);
+    private VodDataServiceImpl vodService;
 
-  public MatcherImpl(CsvStream movieDb, CsvStream actorAndDirectorDb) {
-    LOGGER.info("importing database");
-    // TODO implement me
-    LOGGER.info("database imported");
-  }
+    public MatcherImpl(CsvStream movieDb, CsvStream actorAndDirectorDb) {
+        log.info("importing database");
+        initializeInternalDatabase(movieDb, actorAndDirectorDb);
 
-  @Override
-  public List<IdMapping> match(DatabaseType databaseType, CsvStream externalDb) {
-    // TODO implement me
-    return Collections.emptyList();
-  }
+        log.info("database imported");
+    }
+
+    @Override
+    public List<IdMapping> match(DatabaseType databaseType, CsvStream externalDb) {
+        List<IntegrationDataService.ExternalDbRecord> records = DATA_SERVICE_FACTORY.get(databaseType).populateExternalData(externalDb);
+        return vodService.match(records);
+    }
+
+    private void initializeInternalDatabase(CsvStream movieDb, CsvStream actorAndDirectorDb) {
+        vodService = new VodDataServiceImpl();
+        vodService.populateDatabase(movieDb, actorAndDirectorDb);
+    }
 }

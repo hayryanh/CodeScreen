@@ -14,20 +14,64 @@
     <java.sourceEncoding>UTF-8</java.sourceEncoding>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
+    <lombok.version>1.18.22</lombok.version>
+    <opencvs.version>5.3</opencvs.version>
+    <logback.classic.version>1.2.9</logback.classic.version>
+    <maven.compiler.plugin.version>3.8.1</maven.compiler.plugin.version>
+    <junit.jupiter.engine.version>5.7.0</junit.jupiter.engine.version>
+    <maven.surefire.plugin.version>3.0.0-M5</maven.surefire.plugin.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.projectreactor</groupId>
+        <artifactId>reactor-bom</artifactId>
+        <version>2022.0.10</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>    </dependencies>
+  </dependencyManagement>
 
   <!-- feel free to add dependencies as you see fit -->
   <dependencies>
+    <!-- Project Reactor -->
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-core</artifactId>
+    </dependency>
+
+    <!-- CSV Reader -->
+    <dependency>
+      <groupId>com.opencsv</groupId>
+      <artifactId>opencsv</artifactId>
+      <version>${opencvs.version}</version>
+    </dependency>
+
+    <!-- Common libraries -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <version>${lombok.version}</version>
+    </dependency>
+
+    <!-- Logging -->
     <dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
-      <version>1.2.6</version>
+      <version>${logback.classic.version}</version>
     </dependency>
+
     <!-- test dependencies-->
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-test</artifactId>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.7.0</version>
+      <version>${junit.jupiter.engine.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -37,12 +81,12 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.8.1</version>
+        <version>${maven.compiler.plugin.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0-M5</version>
+        <version>${maven.surefire.plugin.version}</version>
         <configuration>
           <redirectTestOutputToFile>true</redirectTestOutputToFile>
           <reportsDirectory>codescreen/test/output/results</reportsDirectory>

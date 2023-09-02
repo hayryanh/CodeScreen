@@ -1,0 +1,31 @@
+package com.real.model;
+
+/**
+ * CSV files headers
+ **/
+public enum CsvMetadata {
+    ID,
+    TITLE,
+    YEAR,
+    MOVIE_ID,
+    NAME,
+    ROLE,
+    COUNTRY,
+    STUDIONETWORK,
+    MEDIAID,
+    ORIGINALRELEASEDATE,
+    MEDIATYPE,
+    SERIESMEDIAID,
+    SEASONMEDIAID,
+    SERIESTITLE,
+    SEASONNUMBER,
+    EPISODENUMBER,
+    LICENSETYPE,
+    ACTUALRETAILPRICE,
+    OFFERSTARTDATE,
+    OFFERENDDATE,
+    ACTORS,
+    DIRECTOR,
+    XBOXLIVEURL
+
+}
