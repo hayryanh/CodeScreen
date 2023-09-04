@@ -6,9 +6,9 @@ import com.real.util.CsvUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.real.util.CsvUtil.tableColumnsIndexMap;
@@ -24,13 +24,13 @@ public class XBoxDataService implements IntegrationDataService<IntegrationDataSe
      * @return List<ExternalDbRecord> - List of external DB records
      */
     @Override
-    public List<ExternalDbRecord> populateExternalData(Matcher.CsvStream externalDb) {
+    public Set<ExternalDbRecord> populateExternalData(Matcher.CsvStream externalDb) {
         Map<CsvMetadata, Integer> moviesColumnIndexMap = tableColumnsIndexMap(externalDb);
 
         return externalDb.getDataRows().map(row -> buildQuerySpec(row, moviesColumnIndexMap))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
-                .collect(Collectors.toList());
+                .collect(Collectors.toUnmodifiableSet());
     }
 
     private Optional<ExternalDbRecord> buildQuerySpec(String row, Map<CsvMetadata, Integer> moviesColumnIndexMap) {

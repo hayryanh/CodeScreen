@@ -5,6 +5,7 @@ import com.real.service.VodDataServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 public class MatcherImpl implements Matcher {
@@ -20,7 +21,7 @@ public class MatcherImpl implements Matcher {
 
     @Override
     public List<IdMapping> match(DatabaseType databaseType, CsvStream externalDb) {
-        List<IntegrationDataService.ExternalDbRecord> records = DATA_SERVICE_FACTORY.get(databaseType).populateExternalData(externalDb);
+        Set<IntegrationDataService.ExternalDbRecord> records = DATA_SERVICE_FACTORY.get(databaseType).populateExternalData(externalDb);
         return vodService.match(records);
     }
 

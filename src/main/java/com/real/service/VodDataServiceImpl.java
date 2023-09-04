@@ -9,11 +9,14 @@ import com.real.persistence.repository.movie.MovieRepository;
 import com.real.persistence.repository.movie.MovieRepositoryImpl;
 import com.real.util.CsvUtil;
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.BiFunction;
 
 import static com.real.util.CsvUtil.tableColumnsIndexMap;
@@ -69,12 +72,14 @@ public class VodDataServiceImpl implements PersistenceService<IntegrationDataSer
      * @return List<Matcher.IdMapping> - list of mappings
      */
     @Override
-    public List<Matcher.IdMapping> match(List<IntegrationDataService.ExternalDbRecord> records) {
-        Set<Matcher.IdMapping> mappings = new HashSet<>();
+    public List<Matcher.IdMapping> match(Set<IntegrationDataService.ExternalDbRecord> records) {
+        List<Matcher.IdMapping> mappings = new ArrayList<>();
 
         records.forEach(record -> {
-            Optional<String> result = movieRepository.findIdByIndex(record.getComplexKey());
-            result.ifPresent(rt -> mappings.add(new Matcher.IdMapping(Integer.parseInt(rt), record.getExternalId())));
+            Optional<String> movieId = movieRepository.findIdByIndex(record.getComplexKey());
+            movieId.ifPresent(s -> actorRepository.findIdByIndex(s)
+                    .filter(director -> record.getDirector().equalsIgnoreCase(director))
+                    .map(director -> mappings.add(new Matcher.IdMapping(Integer.parseInt(s), record.getExternalId()))));
         });
 
         return new ArrayList<>(mappings);
@@ -83,7 +88,7 @@ public class VodDataServiceImpl implements PersistenceService<IntegrationDataSer
     /**
      * Populate internal database from CSV stream records
      *
-     * @param movieDb - CsvStream
+     * @param movieDb            - CsvStream
      * @param actorAndDirectorDb - CsvStream
      */
     public void populateDatabase(Matcher.CsvStream movieDb, Matcher.CsvStream actorAndDirectorDb) {
@@ -97,7 +102,7 @@ public class VodDataServiceImpl implements PersistenceService<IntegrationDataSer
         rowColumnValues.put(CsvMetadata.ID.name(), values[columns.get(CsvMetadata.ID)].trim());
         rowColumnValues.put(CsvMetadata.TITLE.name(), values[columns.get(CsvMetadata.TITLE)].trim());
         rowColumnValues.put(CsvMetadata.YEAR.name(), values[columns.get(CsvMetadata.YEAR)].trim());
-        LinkedList<ConcurrentHashMap<String, String>> valueList = new LinkedList<>();
+        ConcurrentLinkedQueue<ConcurrentHashMap<String, String>> valueList = new ConcurrentLinkedQueue<>();
         valueList.add(rowColumnValues);
 
         return Optional.of(Row.builder()
@@ -114,7 +119,7 @@ public class VodDataServiceImpl implements PersistenceService<IntegrationDataSer
         rowColumnValues.put(CsvMetadata.MOVIE_ID.name(), values[columns.get(CsvMetadata.MOVIE_ID)].trim());
         rowColumnValues.put(CsvMetadata.NAME.name(), values[columns.get(CsvMetadata.NAME)].trim());
         rowColumnValues.put(CsvMetadata.ROLE.name(), values[columns.get(CsvMetadata.ROLE)].trim());
-        LinkedList<ConcurrentHashMap<String, String>> valueList = new LinkedList<>();
+        ConcurrentLinkedQueue<ConcurrentHashMap<String, String>> valueList = new ConcurrentLinkedQueue<>();
         valueList.add(rowColumnValues);
 
         return Optional.of(Row.builder()
@@ -128,18 +133,20 @@ public class VodDataServiceImpl implements PersistenceService<IntegrationDataSer
     private void initializeMovieTable(Matcher.CsvStream movieDb) {
         Map<CsvMetadata, Integer> moviesColumnIndexMap = tableColumnsIndexMap(movieDb);
 
-        movieDb.getDataRows().forEach(row -> {
-            Optional<Row> tableRow = MOVIE_ROW_BUILDER.apply(row, moviesColumnIndexMap);
-            tableRow.ifPresent(movieRepository::save);
-        });
+        Flux.fromStream(movieDb.getDataRows())
+                .parallel()
+                .runOn(Schedulers.parallel())
+                .map(row -> MOVIE_ROW_BUILDER.apply(row, moviesColumnIndexMap))
+                .subscribe(tableRow -> tableRow.ifPresent(movieRepository::save));
     }
 
     private void initializeActorTable(Matcher.CsvStream actorAndDirectorDb) {
-        Map<CsvMetadata, Integer> moviesColumnIndexMap = tableColumnsIndexMap(actorAndDirectorDb);
+        Map<CsvMetadata, Integer> actorsColumnIndexMap = tableColumnsIndexMap(actorAndDirectorDb);
 
-        actorAndDirectorDb.getDataRows().forEach(row -> {
-            Optional<Row> tableRow = ACTOR_ROW_BUILDER.apply(row, moviesColumnIndexMap);
-            tableRow.ifPresent(actorRepository::save);
-        });
+        Flux.fromStream(actorAndDirectorDb.getDataRows())
+                .parallel()
+                .runOn(Schedulers.parallel())
+                .map(row -> ACTOR_ROW_BUILDER.apply(row, actorsColumnIndexMap))
+                .subscribe(tableRow -> tableRow.ifPresent(actorRepository::save));
     }
 }

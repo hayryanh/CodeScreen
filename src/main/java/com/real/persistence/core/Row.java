@@ -6,11 +6,11 @@ import lombok.Data;
 import lombok.NonNull;
 
 import java.time.LocalDateTime;
-import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- *  The Row class represents as Table record
+ * The Row class represents as Table record
  */
 @Data
 @Builder
@@ -19,7 +19,7 @@ public class Row {
     @NonNull
     private String rowId;
     @NonNull
-    private LinkedList<ConcurrentHashMap<String, String>> rowValues;
+    private ConcurrentLinkedQueue<ConcurrentHashMap<String, String>> rowValues;
     @NonNull
     private LocalDateTime createdAt;
     @NonNull
